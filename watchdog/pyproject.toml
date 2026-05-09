@@ -1,0 +1,10 @@
+[project]
+name = "watchdog"
+version = "0.1.0"
+description = "Panopticon Watchdog Pipeline for OSINT and Arbitrage"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.3",
+]
