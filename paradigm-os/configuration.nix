@@ -5,7 +5,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "paradigm"; # Define your hostname.
+  networking.hostName = "chimeric"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -31,16 +31,16 @@
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.paradigm = {
+  users.users.mxi = {
     isNormalUser = true;
-    description = "Paradigm User";
+    description = "mxi";
     extraGroups = [ "networkmanager" "wheel" "video" "audio" ];
     shell = pkgs.nushell;
     packages = with pkgs; [];
   };
 
   # Enable automatic login for the user.
-  services.getty.autologinUser = "paradigm";
+  services.getty.autologinUser = "mxi";
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;

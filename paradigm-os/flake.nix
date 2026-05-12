@@ -11,7 +11,7 @@
 
   outputs = { self, nixpkgs, home-manager, ... }@inputs: {
     nixosConfigurations = {
-      paradigm = nixpkgs.lib.nixosSystem {
+      chimeric = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
         modules = [
@@ -21,11 +21,13 @@
           ./modules/ai.nix
           ./modules/pentesting.nix
           ./modules/desktop.nix
+          ./modules/virtualisation.nix
+          ./modules/development.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.paradigm = import ./home.nix;
+            home-manager.users.mxi = import ./home.nix;
           }
         ];
       };

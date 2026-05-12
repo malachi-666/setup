@@ -1,8 +1,8 @@
 { config, pkgs, ... }:
 
 {
-  home.username = "paradigm";
-  home.homeDirectory = "/home/paradigm";
+  home.username = "mxi";
+  home.homeDirectory = "/home/mxi";
   home.stateVersion = "24.05";
 
   # User specific packages.
