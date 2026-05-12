@@ -17,6 +17,12 @@ in
   environment.systemPackages = [
     llama-cpp-vulkan
     ollama-vulkan
+
+    # AI CLI Tooling (Orchestrators/Augmentation)
+    pkgs.fabric       # Daniel Miessler's AI augmentation framework
+    pkgs.aichat       # Chat with LLMs in the terminal
+    pkgs.mods         # AI on the command line
+    pkgs.tgpt         # Terminal GPT (No API key required)
   ];
 
   # Setup services if needed

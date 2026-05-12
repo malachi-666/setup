@@ -1,75 +1,77 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Starting Post-Boot Setup for Paradigm OS (Chimeric)..."
+echo "========================================================="
+echo "  PARADIGM-OS: ZERO-TRUNCATION DEPLOYMENT BOOTSTRAPPER   "
+echo "========================================================="
 
 # Ensure we are in the script's directory
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 cd "$DIR"
 
-# 0. Git tracking for Nix flakes
-echo "Checking Git tracking for Nix flakes..."
-if ! command -v git &> /dev/null; then
-    echo "git not found. Using nix run to initialize tracking..."
-    nix run nixpkgs#git -- init
-    nix run nixpkgs#git -- add .
-    nix run nixpkgs#git -- commit -m "chore: initial flake commit for tracking" || true
-else
-    if [ ! -d ".git" ]; then
-        git init
-    fi
-    git add .
-    git commit -m "chore: initial flake commit for tracking" || true
+# 1. BULLETPROOF DEPENDENCY RESOLUTION
+echo "[*] Verifying critical bootstrap dependencies..."
+DEPS=""
+if ! command -v git &> /dev/null; then DEPS="$DEPS git"; fi
+if ! command -v uv &> /dev/null; then DEPS="$DEPS uv"; fi
+if ! command -v navi &> /dev/null; then DEPS="$DEPS navi"; fi
+
+if [ -n "$DEPS" ]; then
+    echo "[!] Missing dependencies detected: $DEPS"
+    echo "[*] Relaunching setup via nix-shell..."
+    exec nix-shell -p $DEPS --run "bash $0"
 fi
 
-# 1. Setup Python Environment via `uv`
-echo "Initializing Python environment using uv..."
+# 2. GIT TRACKING FOR FLAKE EVALUATION (PRE-REBUILD)
+echo "[*] Ensuring Git tracking for Nix Flake evaluation..."
+if [ ! -d ".git" ]; then
+    git init
+    git branch -m main || true
+fi
+
+# We must add everything so Nix can see the files during `nixos-rebuild`
+git add .
+# Commit if there are changes (will fail gracefully if clean, which is fine)
+git commit -m "chore: paradigm-os bootstrap commit" || echo "[*] Working tree clean."
+
+# 3. PYTHON ENVIRONMENT CONTAINMENT (ZERO GLOBAL PYTHON)
+echo "[*] Initializing isolated Python environment via uv..."
 mkdir -p ~/.local/python-envs
 cd ~/.local/python-envs
-if ! command -v uv &> /dev/null; then
-    echo "uv command not found. Using nix run..."
-    nix run nixpkgs#uv -- venv default-env
-else
-    uv venv default-env
-fi
-echo "Python environment created. Activate with: source ~/.local/python-envs/default-env/bin/activate"
 
-# Return to script directory
+if [ ! -d "default-env" ]; then
+    uv venv default-env
+    echo "[+] Created default-env."
+else
+    echo "[*] default-env already exists."
+fi
+echo ">>> Activate with: source ~/.local/python-envs/default-env/bin/activate"
+
 cd "$DIR"
 
-# 2. Setup LazyVim (Neovim)
-echo "Setting up LazyVim..."
+# 4. EDITOR BOOTSTRAPPING (LazyVim & Doom Emacs)
+echo "[*] Bootstrapping Editors..."
+
 if [ ! -d "$HOME/.config/nvim" ]; then
-  if ! command -v git &> /dev/null; then
-      nix run nixpkgs#git -- clone https://github.com/LazyVim/starter ~/.config/nvim
-  else
-      git clone https://github.com/LazyVim/starter ~/.config/nvim
-  fi
+  echo "[+] Cloning LazyVim..."
+  git clone https://github.com/LazyVim/starter ~/.config/nvim
   rm -rf ~/.config/nvim/.git
 else
-  echo "Neovim config already exists."
+  echo "[*] Neovim config already exists."
 fi
 
-# 3. Setup Doom Emacs
-echo "Setting up Doom Emacs..."
 if [ ! -d "$HOME/.config/emacs" ]; then
-  if ! command -v git &> /dev/null; then
-      nix run nixpkgs#git -- clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
-  else
-      git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
-  fi
-  ~/.config/emacs/bin/doom install --no-env --no-fonts || echo "Please run doom install manually if this fails due to missing dependencies"
+  echo "[+] Cloning Doom Emacs..."
+  git clone --depth 1 https://github.com/doomemacs/doomemacs ~/.config/emacs
+  echo "[!] Run '~/.config/emacs/bin/doom install' manually if you wish to finalize Doom."
 else
-  echo "Doom Emacs config already exists."
+  echo "[*] Doom Emacs config already exists."
 fi
 
-# 4. Setup Navi Cheatsheets
-echo "Setting up Navi cheatsheets..."
-if ! command -v navi &> /dev/null; then
-    echo "navi command not found. Using nix run..."
-    nix run nixpkgs#navi -- repo add denisidoro/cheats || true
-else
-    navi repo add denisidoro/cheats || true
-fi
+# 5. NAVI CHEATSHEET SEEDING
+echo "[*] Seeding Navi cheatsheets..."
+navi repo add denisidoro/cheats || echo "[*] Navi cheats already seeded."
 
-echo "Setup Complete!"
+echo "========================================================="
+echo "  BOOTSTRAP COMPLETE. READY FOR nixos-rebuild switch.    "
+echo "========================================================="
